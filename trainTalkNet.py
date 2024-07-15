@@ -79,48 +79,40 @@ def main():
     mAPs = []
     losses = []
     scoreFile = open(args.scoreSavePath, "a+")
+    loss, lr = s.train_network(epoch = epoch, loader = trainLoader, **vars(args))
+    losses.append(loss)
+    if epoch % args.testInterval == 0:        
+        s.saveParameters(args.modelSavePath + "/model_%04d.model"%epoch)
+        mAPs.append(s.evaluate_network(epoch = epoch, loader = valLoader, **vars(args)))
+        timeStamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        print(timeStamp, "%d epoch, mAP %2.2f%%, bestmAP %2.2f%%"%(epoch, mAPs[-1], max(mAPs)))
+        scoreFile.write("%s   %d epoch, LR %f, LOSS %f, mAP %2.2f%%, bestmAP %2.2f%%\n"%(timeStamp, epoch, lr, loss, mAPs[-1], max(mAPs)))
+        scoreFile.flush()
 
-    while(1):        
-        loss, lr = s.train_network(epoch = epoch, loader = trainLoader, **vars(args))
-        losses.append(loss)
-        if epoch % args.testInterval == 0:        
-            s.saveParameters(args.modelSavePath + "/model_%04d.model"%epoch)
-            mAPs.append(s.evaluate_network(epoch = epoch, loader = valLoader, **vars(args)))
-            print(time.strftime("%Y-%m-%d %H:%M:%S"), "%d epoch, mAP %2.2f%%, bestmAP %2.2f%%"%(epoch, mAPs[-1], max(mAPs)))
-            scoreFile.write("%d epoch, LR %f, LOSS %f, mAP %2.2f%%, bestmAP %2.2f%%\n"%(epoch, lr, loss, mAPs[-1], max(mAPs)))
-            scoreFile.flush()
+    if epoch >= args.maxEpoch:
+        epochs = list(range(1, epoch + 1))
+        plt.subplot(1, 2, 1)  # 2 rows, 1 column, 1st subplot
+        plt.plot(epochs, mAPs, label='Accuracy(mAP)')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.legend()
+        plt.title(f'Accuracy over {args.maxEpoch} Epochs')
+        # Second subplot for Loss
+        plt.subplot(1, 2, 2)  # 2 rows, 1 column, 2nd subplot
+        plt.plot(epochs, losses, label='Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.title(f'Loss over {args.maxEpoch} Epochs')
+        plt.tight_layout()
+        directory = args.savePath
+        filename = 'Accuracy_and_Loss.png'
+        full_path = os.path.join(directory, filename)
+        plt.savefig(full_path)
 
-        if epoch >= args.maxEpoch:
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            epochs = list(range(1, epoch + 1))
-            plt.subplot(1, 2, 1)  # 2 rows, 1 column, 1st subplot
-            plt.plot(epochs, mAPs, label='Accuracy(mAP)')
-            plt.xlabel('Epochs')
-            plt.ylabel('Accuracy')
-            plt.legend()
-            plt.title(f'Accuracy over {args.maxEpoch} Epochs')
-            # Second subplot for Loss
-            plt.subplot(1, 2, 2)  # 2 rows, 1 column, 2nd subplot
-            plt.plot(epochs, losses, label='Loss')
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
-            plt.legend()
-            plt.title(f'Loss over {args.maxEpoch} Epochs')
-
-            # Adjust layout
-            plt.tight_layout()
-
-            # Save the combined plot
-            directory = args.savePath
-            filename = 'Accuracy_and_Loss.png'
-            full_path = os.path.join(directory, filename)
-            plt.savefig(full_path)
-
-            plt.show()
+        plt.show()
             
-            quit()
-
-        epoch += 1
+        quit()
 
 if __name__ == '__main__':
     main()

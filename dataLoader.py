@@ -32,7 +32,8 @@ def overlap(dataName, audio, audioSet):
 
 def load_audio(data, dataPath, numFrames, audioAug, audioSet = None):
     dataName = data[0]
-    fps = float(data[2])    
+    fps = float(data[2])
+    dataName.replace(":", "_")    
     audio = audioSet[dataName]    
     if audioAug == True:
         augType = random.randint(0,1)
@@ -51,6 +52,7 @@ def load_audio(data, dataPath, numFrames, audioAug, audioSet = None):
 
 def load_visual(data, dataPath, numFrames, visualAug, useAvdiar): 
     dataName = data[0]
+    dataName.replace(":", "_")
     if(useAvdiar):
         videoName = data[0][:13]
     else:
